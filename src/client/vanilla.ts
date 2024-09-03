@@ -46,6 +46,7 @@ export function createAuthClient<Option extends ClientOptions>(
 	const routes = {
 		...pluginsActions,
 		...resolvedHooks,
+		$fetch,
 		useSession: $session,
 	};
 	const proxy = createDynamicPathProxy(
@@ -62,5 +63,6 @@ export function createAuthClient<Option extends ClientOptions>(
 		InferClientAPI<Option> &
 		InferActions<Option> & {
 			useSession: typeof $session;
+			$fetch: typeof $fetch;
 		};
 }
