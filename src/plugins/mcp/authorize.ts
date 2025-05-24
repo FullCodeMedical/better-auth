@@ -1,7 +1,11 @@
 import { APIError } from "better-call";
 import type { GenericEndpointContext } from "../../types";
 import { getSessionFromCtx } from "../../api";
-import type { AuthorizationQuery, Client, OIDCOptions } from "./types";
+import type {
+	AuthorizationQuery,
+	Client,
+	OIDCOptions,
+} from "../oidc-provider/types";
 import { generateRandomString } from "../../crypto";
 
 function redirectErrorURL(url: string, error: string, description: string) {
@@ -10,10 +14,14 @@ function redirectErrorURL(url: string, error: string, description: string) {
 	}error=${error}&error_description=${description}`;
 }
 
-export async function authorize(
+export async function authorizeMCPOAuth(
 	ctx: GenericEndpointContext,
 	options: OIDCOptions,
 ) {
+	ctx.setHeader("Access-Control-Allow-Origin", "*");
+	ctx.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+	ctx.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+	ctx.setHeader("Access-Control-Max-Age", "86400");
 	const opts = {
 		codeExpiresIn: 600,
 		defaultScope: "openid",
@@ -53,6 +61,7 @@ export async function authorize(
 	}
 
 	const query = ctx.query as AuthorizationQuery;
+	console.log(query);
 	if (!query.client_id) {
 		throw ctx.redirect(`${ctx.context.baseURL}/error?error=invalid_client`);
 	}
@@ -87,6 +96,7 @@ export async function authorize(
 				metadata: res.metadata ? JSON.parse(res.metadata) : {},
 			} as Client;
 		});
+	console.log(client);
 	if (!client) {
 		throw ctx.redirect(`${ctx.context.baseURL}/error?error=invalid_client`);
 	}
@@ -184,7 +194,7 @@ export async function authorize(
 					 * This means the code now needs to be treated as a
 					 * consent request.
 					 *
-					 * once the user consents, the code will be updated
+					 * once the user consents, teh code will be updated
 					 * with the actual code. This is to prevent the
 					 * client from using the code before the user
 					 * consents.
@@ -218,60 +228,5 @@ export async function authorize(
 		throw ctx.redirect(redirectURIWithCode.toString());
 	}
 
-	const hasAlreadyConsented = await ctx.context.adapter
-		.findOne<{
-			consentGiven: boolean;
-		}>({
-			model: "oauthConsent",
-			where: [
-				{
-					field: "clientId",
-					value: client.clientId,
-				},
-				{
-					field: "userId",
-					value: session.user.id,
-				},
-			],
-		})
-		.then((res) => !!res?.consentGiven);
-
-	if (hasAlreadyConsented) {
-		throw ctx.redirect(redirectURIWithCode.toString());
-	}
-
-	if (options?.consentPage) {
-		await ctx.setSignedCookie("oidc_consent_prompt", code, ctx.context.secret, {
-			maxAge: 600,
-			path: "/",
-			sameSite: "lax",
-		});
-		const conceptURI = `${options.consentPage}?client_id=${
-			client.clientId
-		}&scope=${requestScope.join(" ")}`;
-		throw ctx.redirect(conceptURI);
-	}
-	const htmlFn = options?.getConsentHTML;
-
-	if (!htmlFn) {
-		throw new APIError("INTERNAL_SERVER_ERROR", {
-			message: "No consent page provided",
-		});
-	}
-
-	return new Response(
-		htmlFn({
-			scopes: requestScope,
-			clientMetadata: client.metadata,
-			clientIcon: client?.icon,
-			clientId: client.clientId,
-			clientName: client.name,
-			code,
-		}),
-		{
-			headers: {
-				"content-type": "text/html",
-			},
-		},
-	);
+	throw ctx.redirect(redirectURIWithCode.toString());
 }
