@@ -64,8 +64,8 @@
     }
   },
   "dependencies": {
-    "@better-auth/utils": "catalog:",
-    "@better-fetch/fetch": "catalog:",
+    "@better-auth/utils": "0.3.1",
+    "@better-fetch/fetch": "1.1.21",
     "fast-xml-parser": "^5.4.1",
     "jose": "^6.1.3",
     "samlify": "^2.10.2",
@@ -73,20 +73,20 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@better-auth/core": "workspace:*",
+    "@better-auth/core": "*",
     "@types/body-parser": "^1.19.6",
     "@types/express": "^5.0.6",
-    "better-auth": "workspace:*",
-    "better-call": "catalog:",
+    "better-auth": "*",
+    "better-call": "2.0.2",
     "body-parser": "^2.2.2",
     "express": "^5.2.1",
     "oauth2-mock-server": "^8.2.2",
-    "tsdown": "catalog:"
+    "tsdown": "0.21.0-beta.2"
   },
   "peerDependencies": {
-    "@better-auth/core": "workspace:*",
-    "@better-auth/utils": "catalog:",
-    "better-auth": "workspace:*",
-    "better-call": "catalog:"
+    "@better-auth/core": "*",
+    "@better-auth/utils": "0.3.1",
+    "better-auth": "*",
+    "better-call": "2.0.2"
   }
 }
